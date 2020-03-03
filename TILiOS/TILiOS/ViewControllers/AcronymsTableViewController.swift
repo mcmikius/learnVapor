@@ -67,4 +67,12 @@ extension AcronymsTableViewController {
     cell.detailTextLabel?.text = acronym.long
     return cell
   }
+  override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+    if let id = acronyms[indexPath.row].id {
+      let acronymRequest = AcronymRequest(acronymID: id)
+      acronymRequest.delete()
+    }
+    acronyms.remove(at: indexPath.row)
+    tableView.deleteRows(at: [indexPath], with: .automatic)
+  }
 }

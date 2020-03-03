@@ -24,5 +24,17 @@ class LoginTableViewController: UITableViewController {
       ErrorPresenter.showError(message: "Please enter your password", on: self)
       return
     }
+    Auth().login(username: username, password: password) { (result) in
+      switch result {
+      case .success:
+        DispatchQueue.main.async {
+          let appDelegate = UIApplication.shared.delegate as? AppDelegate
+          appDelegate?.window?.rootViewController = UIStoryboard(name: "Main", bundle: Bundle.main).instantiateInitialViewController()
+        }
+      case .failure:
+        let message = "Could not login. Check your credentials and try again"
+        ErrorPresenter.showError(message: message, on: self)
+      }
+    }
   }
 }

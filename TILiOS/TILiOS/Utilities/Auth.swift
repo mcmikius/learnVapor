@@ -45,6 +45,26 @@ class Auth {
     guard let loginString = "\(username):\(password)".data(using: .utf8)?.base64EncodedString() else {
       fatalError()
     }
-
+    
+    var loginRequest = URLRequest(url: url)
+    loginRequest.addValue("Basic \(loginString)", forHTTPHeaderField: "Authorization")
+    loginRequest.httpMethod = "POST"
+    
+    let dataTask = URLSession.shared.dataTask(with: loginRequest) { data, response, _ in
+      guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200, let jsonData = data else {
+        completion(.failure)
+        return
+      }
+      
+      do {
+        let token = try JSONDecoder().decode(Token.self, from: jsonData)
+        self.token = token.token
+        completion(.success)
+      } catch {
+        completion(.failure)
+      }
+      
+    }
+    dataTask.resume()
   }
 }
