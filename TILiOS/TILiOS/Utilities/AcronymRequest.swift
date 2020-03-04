@@ -40,4 +40,69 @@ struct AcronymRequest {
     dataTask.resume()
   }
   
+  func getUser(completion: @escaping (AcronymUserRequestResult) -> Void) {
+    let url = resource.appendingPathComponent("user")
+    let dataTask = URLSession.shared.dataTask(with: url) { (data, _, _) in
+      guard let jsonData = data else {
+        completion(.failure)
+        return
+      }
+      do {
+        let decocer = JSONDecoder()
+        let user = try decocer.decode(User.self, from: jsonData)
+        completion(.success(user))
+      } catch {
+        completion(.failure)
+      }
+    }
+    dataTask.resume()
+  }
+  
+  func getCategories(completion: @escaping (GetResourcesRequest<Category>) -> Void) {
+  let url = resource.appendingPathComponent("categories")
+    let dataTask = URLSession.shared.dataTask(with: url) { (data, _, _) in
+      guard let jsonData = data else {
+        completion(.failure)
+        return
+      }
+      do {
+        let decocer = JSONDecoder()
+        let categories = try decocer.decode([Category].self, from: jsonData)
+        completion(.success(categories))
+      } catch {
+        completion(.failure)
+      }
+    }
+    dataTask.resume()
+  }
+  
+  func add(category: Category, completion: @escaping (CategoryAddResult) -> Void) {
+    guard let token = Auth().token else {
+      Auth().logout()
+      return
+    }
+    guard let categoryID = category.id else {
+      completion(.failure)
+      return
+    }
+    let url = resource.appendingPathComponent("categories").appendingPathComponent("\(categoryID)")
+    var urlRequest = URLRequest(url: url)
+    urlRequest.httpMethod = "POST"
+    urlRequest.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    let dataTask = URLSession.shared.dataTask(with: urlRequest) { (_, response, _) in
+      guard let httpResponse = response as? HTTPURLResponse else {
+        completion(.failure)
+        return
+      }
+      guard httpResponse.statusCode == 200 else {
+        if httpResponse.statusCode == 401 {
+          Auth().logout()
+        }
+        completion(.failure)
+        return
+      }
+      completion(.success)
+    }
+    dataTask.resume()
+  }
 }

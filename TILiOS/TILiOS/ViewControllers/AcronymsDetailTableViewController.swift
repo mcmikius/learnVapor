@@ -42,11 +42,36 @@ class AcronymDetailTableViewController: UITableViewController {
 
   // MARK: - Navigation
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-
+    if segue.identifier == "AddToCategorySegue" {
+      guard let destination = segue.destination as? AddToCategoryTableViewController else {
+        return
+      }
+      destination.acronym = acronym
+      destination.selectedCategories = categories
+    }
   }
 
   func getAcronymData() {
-    
+    guard let id = acronym?.id else {
+      return
+    }
+    let acronymDetailRequester = AcronymRequest(acronymID: id)
+    acronymDetailRequester.getUser { [weak self] (result) in
+      switch result {
+      case .success(let user):
+        self?.user = user
+      case .failure:
+        ErrorPresenter.showError(message: "There was an error getting the acronym's user", on: self)
+      }
+    }
+    acronymDetailRequester.getCategories { [weak self] (result) in
+      switch result {
+      case .success(let categories):
+        self?.categories = categories
+      case .failure:
+        ErrorPresenter.showError(message: "There was an error getting the acronym's categories", on: self)
+      }
+    }
   }
 
   func updateAcronymView() {
